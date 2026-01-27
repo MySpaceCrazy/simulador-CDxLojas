@@ -122,6 +122,7 @@ cds = pd.read_excel(cds_file)
 st.header("2️⃣ Processamento da Solução")
 
 if st.button("🚀 Processar Solução"):
+    st.session_state.processado = True
 
     # Distâncias
     registros = []
@@ -172,6 +173,10 @@ if st.button("🚀 Processar Solução"):
         })
 
     df_resultado = pd.DataFrame(resultados)
+    st.session_state.df_resultado = df_resultado
+    st.session_state.alocacao = alocacao
+    st.session_state.lojas = lojas
+    st.session_state.cds = cds
 
     st.success("Processamento concluído")
 

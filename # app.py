@@ -130,13 +130,33 @@ if not lojas_file or not cds_file:
     st.stop()
 
 lojas = pd.read_excel(lojas_file)
-cds = pd.read_excel(cds_file)
-
-# Esperado: lojas -> id_loja, latitude, longitude
-# Esperado: cds   -> deposito, latitude, longitude, existente, capacidade
+cds_base = pd.read_excel(cds_file)
 
 # ============================
-# ETAPA 2 – PROCESSAMENTO
+# ETAPA 2 – CAPACIDADE DOS DEPÓSITOS
+# ============================
+st.header("2️⃣ Configurar Capacidades dos Depósitos")
+
+cds_editor = cds_base[["deposito", "existente", "capacidade"]].copy()
+
+cds_editor = st.data_editor(
+    cds_editor,
+    hide_index=True,
+    use_container_width=True,
+    column_config={
+        "deposito": st.column_config.TextColumn("Depósito", disabled=True),
+        "existente": st.column_config.CheckboxColumn("Existente?"),
+        "capacidade": st.column_config.NumberColumn("Capacidade", min_value=0)
+    }
+)
+
+cds = cds_base.merge(cds_editor, on="deposito", suffixes=("", "_edit"))
+cds["existente"] = cds["existente_edit"]
+cds["capacidade"] = cds["capacidade_edit"]
+cds = cds.drop(columns=["existente_edit", "capacidade_edit"])
+
+# ============================
+# ETAPA 3 – PROCESSAMENTO
 # ============================
 st.header("2️⃣ Processamento da Solução")
 

@@ -80,20 +80,39 @@ with st.sidebar:
     st.divider()
     st.subheader("Custos Operacionais")
 
-    custos_operacionais = {
-        "Minimo": {"fixo": 0.30, "variavel": 0.45},
-        "Pequeno": {"fixo": 0.25, "variavel": 0.35},
-        "Medio": {"fixo": 0.20, "variavel": 0.30},
-        "Grande": {"fixo": 0.15, "variavel": 0.25},
-    }
+custos_operacionais_df = st.data_editor(
+    pd.DataFrame({
+        "Tamanho": ["Minimo", "Pequeno", "Medio", "Grande"],
+        "Custo Fixo": [0.30, 0.25, 0.20, 0.15],
+        "Custo Variável": [0.45, 0.35, 0.30, 0.25]
+    }),
+    hide_index=True,
+    use_container_width=True
+)
 
-    st.subheader("Investimento por Tamanho")
-    investimentos = {
-        "Minimo": 4_000_000,
-        "Pequeno": 6_000_000,
-        "Medio": 8_000_000,
-        "Grande": 10_000_000,
+custos_operacionais = {
+    row['Tamanho']: {
+        'fixo': row['Custo Fixo'],
+        'variavel': row['Custo Variável']
     }
+    for _, row in custos_operacionais_df.iterrows()
+}
+
+st.subheader("Investimento por Tamanho")
+
+investimentos_df = st.data_editor(
+    pd.DataFrame({
+        "Tamanho": ["Minimo", "Pequeno", "Medio", "Grande"],
+        "Investimento (R$)": [4_000_000, 6_000_000, 8_000_000, 10_000_000]
+    }),
+    hide_index=True,
+    use_container_width=True
+)
+
+investimentos = {
+    row['Tamanho']: row['Investimento (R$)']
+    for _, row in investimentos_df.iterrows()
+}
 
 # ============================
 # ETAPA 1 – UPLOAD

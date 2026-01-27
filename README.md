@@ -1,4 +1,5 @@
 # simulador-CDxLojas
+
 streamlit
 pandas
 numpy

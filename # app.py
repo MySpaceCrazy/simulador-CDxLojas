@@ -254,7 +254,11 @@ if st.session_state.get("mostrar_mapa"):
     )
 
     cores = ["red", "blue", "green", "purple", "orange"]
-    cor_cd = {cd: cores[i % len(cores)] for i, cd in enumerate(resumo["deposito"])}
+    cor_cd = {
+    cd: cores[i % len(cores)]
+    for i, cd in enumerate(df_resultado["Depósito"])
+}
+
 
     for _, row in st.session_state.alocacao.iterrows():
         if row["deposito"] == "SEM_CAPACIDADE":

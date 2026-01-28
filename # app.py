@@ -78,7 +78,6 @@ with st.sidebar:
         }),
         hide_index=True
     )
-
 # ============================
 # UPLOAD
 # ============================
@@ -92,7 +91,6 @@ if not lojas_file or not cds_file:
 
 lojas = pd.read_excel(lojas_file)
 cds_base = pd.read_excel(cds_file)
-
 # ============================
 # CAPACIDADE CDs
 # ============================
@@ -104,7 +102,6 @@ cds = st.data_editor(
 )
 
 cds_validos = cds[cds["existente"]].copy()
-
 # ============================
 # BOTÕES
 # ============================
@@ -118,7 +115,6 @@ btn_limpar = col3.button("🧹 Limpar Cache")
 if btn_limpar:
     st.session_state.clear()
     st.rerun()
-
 # ============================
 # MATRIZ
 # ============================
@@ -134,7 +130,6 @@ if btn_matriz:
     st.session_state.matriz = pd.DataFrame(matriz)
     st.subheader("Prévia da Matriz de Custos")
     st.dataframe(st.session_state.matriz.head(20))
-
 # ============================
 # PROCESSAMENTO
 # ============================
@@ -173,20 +168,80 @@ if btn_processar:
 
     st.session_state.alocacao = pd.DataFrame(alocacao)
     st.session_state.mostrar_mapa = True
-
 # ============================
 # RESULTADOS
 # ============================
 if "alocacao" in st.session_state:
     st.header("4️⃣ Resultados")
 
-    resumo = st.session_state.alocacao.groupby("deposito").agg(
+    resumo_base = st.session_state.alocacao.groupby("deposito").agg(
         Lojas=("loja", "count"),
         Transporte=("custo", "sum")
     ).reset_index()
 
-    st.dataframe(resumo, use_container_width=True)
+    resultados = []
 
+    for _, row in resumo_base.iterrows():
+        deposito = row["deposito"]
+        lojas_qtd = row["Lojas"]
+        transporte = row["Transporte"] if not np.isnan(row["Transporte"]) else 0
+
+        # Classificação de tamanho
+        tamanho = classificar_tamanho(lojas_qtd, custos_operacionais_df)
+
+        # Parâmetros operacionais
+        p_fixo = custos_operacionais_df.loc[
+            custos_operacionais_df["Tamanho"] == tamanho, "% Fixo"
+        ].values[0]
+
+        p_var = custos_operacionais_df.loc[
+            custos_operacionais_df["Tamanho"] == tamanho, "Variável"
+        ].values[0]
+
+        # Base operacional
+        base_operacional = lojas_qtd * pecas_loja_dia * custo_medio_produto
+
+        custo_fixo = base_operacional * p_fixo
+        custo_variavel = base_operacional * p_var
+        operacional = custo_fixo + custo_variavel
+
+        # Capital
+        dias = custo_capital_df.loc[
+            custo_capital_df["Tamanho"] == tamanho, "Dias Cobertura"
+        ].values[0]
+
+        capital = (
+            lojas_qtd
+            * pecas_loja_dia
+            * dias
+            * custo_medio_produto
+            * custo_oportunidade
+        )
+
+        # Investimento anualizado
+        investimento_total = investimentos_df.loc[
+            investimentos_df["Tamanho"] == tamanho, "Investimento (R$)"
+        ].values[0]
+
+        investimento = investimento_total / payback
+
+        total = transporte + operacional + capital + investimento
+
+        resultados.append({
+            "Depósito": deposito,
+            "Lojas": lojas_qtd,
+            "Tamanho": tamanho,
+            "Transporte (R$)": round(transporte, 2),
+            "Fixo (R$)": round(custo_fixo, 2),
+            "Variável (R$)": round(custo_variavel, 2),
+            "Operacional (R$)": round(operacional, 2),
+            "Capital (R$)": round(capital, 2),
+            "Investimento (R$)": round(investimento, 2),
+            "Total (R$)": round(total, 2)
+        })
+
+    df_resultado = pd.DataFrame(resultados)
+    st.dataframe(df_resultado, use_container_width=True)
 # ============================
 # MAPA
 # ============================

@@ -257,7 +257,7 @@ if st.session_state.get("mostrar_mapa"):
     cor_cd = {
     cd: cores[i % len(cores)]
     for i, cd in enumerate(df_resultado["Depósito"])
-}
+    }
 
 
     for _, row in st.session_state.alocacao.iterrows():
